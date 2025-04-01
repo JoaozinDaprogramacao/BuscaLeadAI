@@ -4,10 +4,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 import pandas as pd
 import time
 import urllib.parse
 import datetime
+import os
+from dotenv import load_dotenv
+import re
 
 class GoogleMapsLeadScraper:
     def __init__(self):
@@ -59,28 +63,55 @@ class GoogleMapsLeadScraper:
                             (By.CSS_SELECTOR, "h1.DUwDvf, div.fontHeadlineLarge"))).text
                         
                         try:
-                            telefone_element = self.wait.until(EC.presence_of_element_located(
-                                (By.CSS_SELECTOR, "button[data-tooltip='Copiar número de telefone']")))
-                            telefone = telefone_element.get_attribute("aria-label")
-                            if telefone:
-                                # Remove o prefixo "Copiar número de telefone" e espaços extras
-                                telefone = telefone.replace("Copiar número de telefone", "").strip()
-                                if telefone.startswith(":"):
-                                    telefone = telefone[1:].strip()
-                                # Formata e valida o número
-                                telefone = self.formatar_numero_whatsapp(telefone, nome)
-                        except Exception:
+                            print("\n=== Iniciando coleta de telefone ===")
+                            
+                            # Verifica se a sessão do driver ainda está ativa
                             try:
-                                # Tenta um seletor alternativo
-                                telefone_element = self.wait.until(EC.presence_of_element_located(
-                                    (By.CSS_SELECTOR, "button[data-item-id*='phone']")))
-                                telefone = telefone_element.get_attribute("aria-label")
+                                self.driver.current_url
+                            except:
+                                print("Sessão do driver inválida - reconectando...")
+                                self.driver = webdriver.Chrome(options=self.options)
+                                self.wait = WebDriverWait(self.driver, 10)
+                                return "Não disponível"
+                            
+                            print("1. Tentando localizar elemento do telefone...")
+                            try:
+                                # Tenta encontrar o elemento do telefone
+                                telefone_element = self.wait.until(
+                                    EC.presence_of_element_located((
+                                        By.CSS_SELECTOR, 
+                                        "button[data-item-id='phone:tel']"
+                                    ))
+                                )
+                                
+                                # Tenta clicar no elemento para garantir que está visível
+                                self.driver.execute_script("arguments[0].click();", telefone_element)
+                                time.sleep(1)
+                                
+                                # Tenta obter o número de diferentes formas
+                                telefone = (
+                                    telefone_element.get_attribute("aria-label") or 
+                                    telefone_element.text or
+                                    self.driver.execute_script("return arguments[0].textContent;", telefone_element)
+                                )
+                                
+                                # Limpa o número
                                 if telefone:
-                                    telefone = telefone.split(":")[-1].strip()
-                            except Exception:
+                                    for prefix in ["Copiar número de telefone: ", "Copiar número: ", "Tel: "]:
+                                        telefone = telefone.replace(prefix, "")
+                                    telefone = telefone.strip()
+                                else:
+                                    telefone = "Não disponível"
+                            except Exception as e:
+                                print(f"Erro ao coletar telefone: {str(e)}")
                                 telefone = "Não disponível"
-                        except:
+                        except Exception as e:
+                            print(f"\nERRO geral: {str(e)}")
+                            print(f"Tipo do erro: {type(e).__name__}")
                             telefone = "Não disponível"
+                        except Exception as e:
+                            print(f"\nERRO CRÍTICO: {str(e)}")
+                            return "Não disponível"
                             
                         try:
                             endereco_element = self.driver.find_element(By.CSS_SELECTOR,
@@ -131,13 +162,11 @@ class GoogleMapsLeadScraper:
     def buscar_leads_generator(self, nicho, local, quantidade):
         busca = f"{nicho} em {local}"
         self.driver.get("https://www.google.com/maps")
-        
         search_box = self.wait.until(EC.presence_of_element_located((By.ID, "searchboxinput")))
         search_box.send_keys(busca)
         search_box.send_keys(Keys.ENTER)
         
         time.sleep(5)
-        
         leads_encontrados = 0
         tentativas = 0
         max_tentativas = 50
@@ -147,7 +176,7 @@ class GoogleMapsLeadScraper:
                 items = self.wait.until(EC.presence_of_all_elements_located(
                     (By.CSS_SELECTOR, "a.hfpxzc")))
                 
-                if not items:   
+                if not items:
                     tentativas += 1
                     continue
                     
@@ -164,37 +193,40 @@ class GoogleMapsLeadScraper:
                         nome = self.wait.until(EC.presence_of_element_located(
                             (By.CSS_SELECTOR, "h1.DUwDvf, div.fontHeadlineLarge"))).text
                         
+                        # Tenta obter o telefone com diferentes seletores
                         try:
-                            # Tenta diferentes seletores para o telefone
-                            try:
+                            # Primeiro tenta o seletor do botão de copiar telefone
+                            telefone_element = self.wait.until(EC.presence_of_element_located(
+                                (By.CSS_SELECTOR, "button[data-item-id*='phone:tel']")))
+                            telefone = telefone_element.get_attribute("aria-label") or telefone_element.text
+                            
+                            if not telefone:
+                                # Tenta outro seletor comum
                                 telefone_element = self.wait.until(EC.presence_of_element_located(
                                     (By.CSS_SELECTOR, "button[data-tooltip='Copiar número de telefone']")))
                                 telefone = telefone_element.get_attribute("aria-label")
-                                if telefone:
-                                    # Remove o prefixo "Copiar número de telefone" e espaços extras
+                            
+                            if telefone:
+                                if "Copiar número de telefone" in telefone:
                                     telefone = telefone.replace("Copiar número de telefone", "").strip()
                                     if telefone.startswith(":"):
                                         telefone = telefone[1:].strip()
-                                    # Formata e valida o número
+                                elif ":" in telefone:
+                                    telefone = telefone.split(":")[-1].strip()
+                                
+                                # Formata o número para URL do WhatsApp
+                                if telefone != "Não disponível":
                                     telefone = self.formatar_numero_whatsapp(telefone, nome)
-                            except Exception:
-                                # Tenta outro seletor alternativo
-                                try:
-                                    telefone_element = self.wait.until(EC.presence_of_element_located(
-                                        (By.CSS_SELECTOR, "button[data-item-id*='phone']")))
-                                    telefone = telefone_element.get_attribute("aria-label")
-                                    if telefone:
-                                        telefone = telefone.split(":")[-1].strip()
-                                except Exception:
-                                    telefone = "Não disponível"
-                        except:
+                        except Exception as e:
+                            print(f"Erro ao coletar telefone: {e}")
                             telefone = "Não disponível"
-                            
+                        
+                        # Tenta obter o endereço
                         try:
                             endereco_element = self.wait.until(EC.presence_of_element_located(
                                 (By.CSS_SELECTOR, "button[data-item-id='address']")))
                             endereco = endereco_element.get_attribute("aria-label").replace("Copiar endereço: ", "")
-                        except:
+                        except Exception:
                             endereco = "Não disponível"
                         
                         lead = {
@@ -243,47 +275,29 @@ class GoogleMapsLeadScraper:
         if not telefone or telefone == "Não disponível":
             return "Não disponível"
         
-        # Remove todos os caracteres não numéricos
+        # Remove caracteres não numéricos
         numero = ''.join(filter(str.isdigit, telefone))
         
-        if not numero:
+        # Valida o número
+        if not numero or len(numero) < 10:
             return "Não disponível"
         
-        # Validações do número
-        if len(numero) < 10 or len(numero) > 15:
-            return "Não disponível"
+        # Adiciona o código do país se necessário
+        if len(numero) in [10, 11] and not numero.startswith('55'):
+            numero = f"55{numero}"
         
-        if len(numero) in [10, 11]:
-            if not numero.startswith('55'):
-                numero = f"55{numero}"
+        # Carrega o template da mensagem do .env
+        load_dotenv()
+        template_mensagem = os.getenv('WHATSAPP_MESSAGE_TEMPLATE')
         
-        if len(numero) < 12:
-            return "Não disponível"
-        
-        if numero[4] not in '6789':
-            return "Não disponível"
-        
-        # Determina a saudação
-        hora_atual = datetime.datetime.now().hour
-        if 5 <= hora_atual < 12:
-            saudacao = "Bom dia"
-        elif 12 <= hora_atual < 18:
-            saudacao = "Boa tarde"
-        else:
-            saudacao = "Boa noite"
-        
-        # Formata a mensagem sem codificação inicial
-        mensagem = (
-            f"{saudacao}! Acabei de ver a {nome_empresa} no Maps e fiquei pensando... será que já usam IA para: \n\n"
-            "→ Automatizar processos repetitivos? (quase 65% dos processos se encaixam aqui) \n"
-            "→ Converter mais clientes sem aumentar a equipe? \n"
-            "→ Reduzir custos bases do processo dos serviços?\n\n"
-            "Se tiver 1 minutinho, mostro como outras empresas parecidas estão fazendo. Me diz o que acha!"
+        # Formata a mensagem
+        mensagem = template_mensagem.format(
+            saudacao="Boa tarde",
+            nome_empresa=nome_empresa
         )
         
-        # Usa urllib.parse.quote para codificar corretamente a URL
+        # Codifica a mensagem para URL
         mensagem_codificada = urllib.parse.quote(mensagem)
-        
         return f"https://wa.me/{numero}?text={mensagem_codificada}"
 
     def formatar_mensagem_whatsapp(self, nome_empresa):

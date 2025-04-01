@@ -16,6 +16,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
+import datetime
 
 load_dotenv()
 
@@ -203,14 +204,16 @@ class WhatsAppWindow(QMainWindow):
                 
                 for idx, linha in df.iterrows():
                     self.tabela.insertRow(idx)
-                    self.tabela.setItem(idx, 0, QTableWidgetItem(str(linha['Nome'])))
+                    nome = str(linha['Nome'])
+                    telefone = str(linha['Telefone'])
+                    endereco = str(linha['Endereço'])
                     
-                    item_telefone = QTableWidgetItem(str(linha['Telefone']))
-                    if str(linha['Telefone']).startswith('https://wa.me/'):
+                    self.tabela.setItem(idx, 0, QTableWidgetItem(nome))
+                    item_telefone = QTableWidgetItem(telefone)
+                    if telefone.startswith('https://wa.me/'):
                         item_telefone.setForeground(QColor("#00b894"))
                     self.tabela.setItem(idx, 1, item_telefone)
-                    
-                    self.tabela.setItem(idx, 2, QTableWidgetItem(str(linha['Endereço'])))
+                    self.tabela.setItem(idx, 2, QTableWidgetItem(endereco))
                 
                 self.botao_enviar.setEnabled(True)
                 

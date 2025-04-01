@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLineEdit, 
-                           QPushButton, QSpinBox, QLabel, QHBoxLayout)
+                           QPushButton, QSpinBox, QLabel, QHBoxLayout, QTextEdit)
 from PyQt5.QtCore import Qt
 from dotenv import load_dotenv, set_key
 import os
@@ -62,6 +62,20 @@ class ConfigWindow(QDialog):
         self.delay_send = QSpinBox()
         self.delay_between = QSpinBox()
         
+        # Campo de mensagem personalizada
+        self.mensagem_whatsapp = QTextEdit()  # Novo campo
+        self.mensagem_whatsapp.setMinimumHeight(150)
+        self.mensagem_whatsapp.setStyleSheet("""
+            QTextEdit {
+                padding: 8px;
+                background: #1e293b;
+                border: 1px solid #3b82f6;
+                border-radius: 4px;
+                color: white;
+                font-size: 14px;
+            }
+        """)
+        
         # Adiciona campos ao layout
         form_layout.addRow("Botão Enviar (XPath):", self.send_button)
         form_layout.addRow("Chat Carregado (XPath):", self.chat_loaded)
@@ -69,6 +83,7 @@ class ConfigWindow(QDialog):
         form_layout.addRow("Delay após carregar (s):", self.delay_load)
         form_layout.addRow("Delay após enviar (s):", self.delay_send)
         form_layout.addRow("Delay entre mensagens (s):", self.delay_between)
+        form_layout.addRow("Mensagem personalizada:", self.mensagem_whatsapp)
         
         layout.addLayout(form_layout)
         
@@ -87,25 +102,39 @@ class ConfigWindow(QDialog):
         layout.addLayout(button_layout)
 
     def carregar_configuracoes(self):
-        # Recarrega o arquivo .env
         load_dotenv(override=True)
         
-        # Atualiza os valores dos campos
+        # Carrega configurações existentes...
         self.send_button.setText(os.getenv('WHATSAPP_SEND_BUTTON_XPATH', ''))
         self.chat_loaded.setText(os.getenv('WHATSAPP_CHAT_LOADED_XPATH', ''))
         self.compose_box.setText(os.getenv('WHATSAPP_COMPOSE_BOX_XPATH', ''))
         self.delay_load.setValue(int(os.getenv('DELAY_AFTER_LOAD', '2')))
         self.delay_send.setValue(int(os.getenv('DELAY_AFTER_SEND', '3')))
         self.delay_between.setValue(int(os.getenv('DELAY_BETWEEN_MESSAGES', '5')))
+        
+        # Carrega mensagem personalizada
+        mensagem_padrao = (
+            "{saudacao}! Acabei de ver a {nome_empresa} no Maps e fiquei pensando... "
+            "será que já usam IA para: \n\n"
+            "→ Automatizar processos repetitivos? (quase 65% dos processos se encaixam aqui) \n"
+            "→ Converter mais clientes sem aumentar a equipe? \n"
+            "→ Reduzir custos bases do processo dos serviços?\n\n"
+            "Se tiver 1 minutinho, mostro como outras empresas parecidas estão fazendo. Me diz o que acha!"
+        )
+        self.mensagem_whatsapp.setText(os.getenv('WHATSAPP_MESSAGE_TEMPLATE', mensagem_padrao))
 
     def save_config(self):
         env_path = '.env'
         
+        # Salva configurações existentes...
         set_key(env_path, 'WHATSAPP_SEND_BUTTON_XPATH', self.send_button.text())
         set_key(env_path, 'WHATSAPP_CHAT_LOADED_XPATH', self.chat_loaded.text())
         set_key(env_path, 'WHATSAPP_COMPOSE_BOX_XPATH', self.compose_box.text())
         set_key(env_path, 'DELAY_AFTER_LOAD', str(self.delay_load.value()))
         set_key(env_path, 'DELAY_AFTER_SEND', str(self.delay_send.value()))
         set_key(env_path, 'DELAY_BETWEEN_MESSAGES', str(self.delay_between.value()))
+        
+        # Salva mensagem personalizada
+        set_key(env_path, 'WHATSAPP_MESSAGE_TEMPLATE', self.mensagem_whatsapp.toPlainText())
         
         self.accept() 
