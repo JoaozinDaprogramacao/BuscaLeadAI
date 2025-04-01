@@ -1,0 +1,29 @@
+2025/03/28-22:20:20.278 7fee Reusing MANIFEST /home/joao/Documentos/InovaSiteSites/buscaleadspy/C:\Users\joao\AppData\Local\Google\Chrome\User Data/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/03/28-22:20:20.278 7fee Recovering log #163
+2025/03/28-22:20:20.285 7fee Reusing old log /home/joao/Documentos/InovaSiteSites/buscaleadspy/C:\Users\joao\AppData\Local\Google\Chrome\User Data/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000163.log 
+2025/03/28-22:20:21.683 7ff0 Level-0 table #179: started
+2025/03/28-22:20:21.692 7ff0 Level-0 table #179: 353357 bytes OK
+2025/03/28-22:20:21.695 7ff0 Delete type=0 #163
+2025/03/28-22:20:21.695 7fee Manual compaction at level-0 from '\x00\x1c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1d\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/03/28-22:20:22.767 7fef Compacting 1@1 + 9@2 files
+2025/03/28-22:20:22.818 7fef Generated table #180@1: 47976 keys, 2202027 bytes
+2025/03/28-22:20:22.844 7fef Generated table #181@1: 10927 keys, 2179716 bytes
+2025/03/28-22:20:22.861 7fef Generated table #182@1: 1831 keys, 2150391 bytes
+2025/03/28-22:20:22.886 7fef Generated table #183@1: 2709 keys, 2153740 bytes
+2025/03/28-22:20:22.902 7fef Generated table #184@1: 3622 keys, 2160758 bytes
+2025/03/28-22:20:22.937 7fef Generated table #185@1: 26040 keys, 2241329 bytes
+2025/03/28-22:20:22.971 7fef Generated table #186@1: 32933 keys, 2235083 bytes
+2025/03/28-22:20:23.013 7fef Generated table #187@1: 67281 keys, 2239699 bytes
+2025/03/28-22:20:23.017 7fef Generated table #188@1: 5007 keys, 118068 bytes
+2025/03/28-22:20:23.017 7fef Compacted 1@1 + 9@2 files => 17680811 bytes
+2025/03/28-22:20:23.020 7fef compacted to: files[ 0 0 9 0 0 0 0 ]
+2025/03/28-22:20:23.020 7fef Delete type=2 #171
+2025/03/28-22:20:23.020 7fef Delete type=2 #168
+2025/03/28-22:20:23.020 7fef Delete type=2 #174
+2025/03/28-22:20:23.020 7fef Delete type=2 #179
+2025/03/28-22:20:23.021 7fef Delete type=2 #170
+2025/03/28-22:20:23.021 7fef Delete type=2 #176
+2025/03/28-22:20:23.021 7fef Delete type=2 #175
+2025/03/28-22:20:23.021 7fef Delete type=2 #169
+2025/03/28-22:20:23.021 7fef Delete type=2 #173
+2025/03/28-22:20:23.021 7fef Delete type=2 #172
