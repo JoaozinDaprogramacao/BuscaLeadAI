@@ -15,6 +15,14 @@ import urllib.parse
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Carrega os XPaths do .env
+SEND_BUTTON_XPATH = os.getenv('WHATSAPP_SEND_BUTTON_XPATH')
+CHAT_LOADED_XPATH = os.getenv('WHATSAPP_CHAT_LOADED_XPATH')
+COMPOSE_BOX_XPATH = os.getenv('WHATSAPP_COMPOSE_BOX_XPATH')
 
 class EnviadorWhatsAppThread(QThread):
     progresso_signal = pyqtSignal(str)
@@ -80,16 +88,16 @@ class EnviadorWhatsAppThread(QThread):
                     # Espera o campo de mensagem aparecer (indica que o chat carregou)
                     campo_mensagem = self.wait.until(
                         EC.presence_of_element_located((
-                            By.XPATH, '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[1]/div[2]/div/p'
+                            By.XPATH, CHAT_LOADED_XPATH
                         ))
                     )
                     
                     time.sleep(2)  # Pequena pausa para garantir que tudo carregou
                     
-                    # Clica no botão de enviar usando o xpath correto
+                    # Clica no botão de enviar usando o xpath do .env
                     botao_enviar = self.wait.until(
                         EC.element_to_be_clickable((
-                            By.XPATH, '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[2]/button/span'
+                            By.XPATH, SEND_BUTTON_XPATH
                         ))
                     )
                     botao_enviar.click()
