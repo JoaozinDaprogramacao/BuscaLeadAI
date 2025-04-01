@@ -65,53 +65,45 @@ class GoogleMapsLeadScraper:
                         try:
                             print("\n=== Iniciando coleta de telefone ===")
                             
-                            # Verifica se a sessão do driver ainda está ativa
+                            # Tenta encontrar o elemento do telefone usando XPath
                             try:
-                                self.driver.current_url
-                            except:
-                                print("Sessão do driver inválida - reconectando...")
-                                self.driver = webdriver.Chrome(options=self.options)
-                                self.wait = WebDriverWait(self.driver, 10)
-                                return "Não disponível"
-                            
-                            print("1. Tentando localizar elemento do telefone...")
-                            try:
-                                # Tenta encontrar o elemento do telefone
                                 telefone_element = self.wait.until(
                                     EC.presence_of_element_located((
-                                        By.CSS_SELECTOR, 
-                                        "button[data-item-id='phone:tel']"
+                                        By.XPATH, 
+                                        '//*[@id="QA0Szd"]/div/div/div[1]/div[3]/div/div[1]/div/div/div[2]/div[9]/div[6]/button/div/div[2]/div[1]'
                                     ))
                                 )
                                 
-                                # Tenta clicar no elemento para garantir que está visível
-                                self.driver.execute_script("arguments[0].click();", telefone_element)
-                                time.sleep(1)
+                                # Tenta clicar no elemento pai
+                                try:
+                                    botao_pai = telefone_element.find_element(By.XPATH, ".//ancestor::button")
+                                    self.driver.execute_script("arguments[0].click();", botao_pai)
+                                    time.sleep(1)
+                                except:
+                                    pass
                                 
-                                # Tenta obter o número de diferentes formas
-                                telefone = (
-                                    telefone_element.get_attribute("aria-label") or 
-                                    telefone_element.text or
-                                    self.driver.execute_script("return arguments[0].textContent;", telefone_element)
-                                )
+                                # Obtém o texto do elemento
+                                telefone = telefone_element.text
+                                if not telefone:
+                                    telefone = self.driver.execute_script(
+                                        "return arguments[0].textContent;", 
+                                        telefone_element
+                                    )
+                                
+                                print(f"Telefone encontrado: {telefone}")
                                 
                                 # Limpa o número
                                 if telefone:
-                                    for prefix in ["Copiar número de telefone: ", "Copiar número: ", "Tel: "]:
-                                        telefone = telefone.replace(prefix, "")
                                     telefone = telefone.strip()
+                                    print(f"Telefone após limpeza: {telefone}")
                                 else:
                                     telefone = "Não disponível"
                             except Exception as e:
-                                print(f"Erro ao coletar telefone: {str(e)}")
+                                print(f"Erro ao encontrar telefone: {str(e)}")
                                 telefone = "Não disponível"
                         except Exception as e:
-                            print(f"\nERRO geral: {str(e)}")
-                            print(f"Tipo do erro: {type(e).__name__}")
+                            print(f"Erro geral: {str(e)}")
                             telefone = "Não disponível"
-                        except Exception as e:
-                            print(f"\nERRO CRÍTICO: {str(e)}")
-                            return "Não disponível"
                             
                         try:
                             endereco_element = self.driver.find_element(By.CSS_SELECTOR,
@@ -278,26 +270,26 @@ class GoogleMapsLeadScraper:
         # Remove caracteres não numéricos
         numero = ''.join(filter(str.isdigit, telefone))
         
-        # Valida o número
         if not numero or len(numero) < 10:
             return "Não disponível"
         
-        # Adiciona o código do país se necessário
+        # Adiciona código do país se necessário
         if len(numero) in [10, 11] and not numero.startswith('55'):
             numero = f"55{numero}"
         
-        # Carrega o template da mensagem do .env
+        # Carrega o template e formata a mensagem
         load_dotenv()
-        template_mensagem = os.getenv('WHATSAPP_MESSAGE_TEMPLATE')
-        
-        # Formata a mensagem
-        mensagem = template_mensagem.format(
-            saudacao="Boa tarde",
-            nome_empresa=nome_empresa
-        )
+        mensagem = (
+            "Boa tarde! Acabei de ver a {nome_empresa} no Maps e fiquei pensando... será que já usam IA para:\n\n"
+            "→ Automatizar processos repetitivos? (quase 65% dos processos se encaixam aqui)\n"
+            "→ Converter mais clientes sem aumentar a equipe?\n"
+            "→ Reduzir custos bases do processo dos serviços?\n\n"
+            "Se tiver 1 minutinho, mostro como outras empresas parecidas estão fazendo. Me diz o que acha!"
+        ).format(nome_empresa=nome_empresa)
         
         # Codifica a mensagem para URL
         mensagem_codificada = urllib.parse.quote(mensagem)
+        
         return f"https://wa.me/{numero}?text={mensagem_codificada}"
 
     def formatar_mensagem_whatsapp(self, nome_empresa):
