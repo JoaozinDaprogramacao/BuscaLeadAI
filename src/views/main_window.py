@@ -43,7 +43,7 @@ class ScraperThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Google Maps Lead Scraper")
+        self.setWindowTitle("Google Maps Scraper")
         self.setMinimumSize(1000, 700)
         self.setStyleSheet("""
             QMainWindow {
@@ -116,12 +116,21 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        # Widget central com margem
+        # Widget central
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(20)
+        layout = QVBoxLayout(central_widget)
+        
+        # Header com botão voltar
+        header_layout = QHBoxLayout()
+        
+        voltar_button = QPushButton("← Voltar")
+        voltar_button.setObjectName("back-button")
+        voltar_button.setCursor(Qt.PointingHandCursor)
+        voltar_button.clicked.connect(self.voltar_home)
+        header_layout.addWidget(voltar_button, alignment=Qt.AlignLeft)
+        
+        layout.addLayout(header_layout)
         
         # Título
         title_label = QLabel("Google Maps Lead Scraper")
@@ -132,7 +141,7 @@ class MainWindow(QMainWindow):
             margin-bottom: 20px;
         """)
         title_label.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(title_label)
+        layout.addWidget(title_label)
         
         # Container para os inputs
         input_container = QWidget()
@@ -174,23 +183,23 @@ class MainWindow(QMainWindow):
             else:
                 self.qtd_input = widget
         
-        main_layout.addWidget(input_container)
+        layout.addWidget(input_container)
         
         # Tabela de resultados
         self.table = QTableWidget()
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Nome", "Telefone", "Endereço"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        main_layout.addWidget(self.table)
+        layout.addWidget(self.table)
         
         # Barra de progresso
         self.progress_bar = QProgressBar()
-        main_layout.addWidget(self.progress_bar)
+        layout.addWidget(self.progress_bar)
         
         # Status
         self.status_label = QLabel("Pronto para iniciar")
         self.status_label.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(self.status_label)
+        layout.addWidget(self.status_label)
         
         # Botões
         button_layout = QHBoxLayout()
@@ -204,7 +213,7 @@ class MainWindow(QMainWindow):
         button_layout.addWidget(self.start_button)
         button_layout.addWidget(self.stop_button)
         button_layout.addWidget(self.save_button)
-        main_layout.addLayout(button_layout)
+        layout.addLayout(button_layout)
         
         # Botões com IDs
         self.start_button.setObjectName("start")
@@ -337,3 +346,9 @@ class MainWindow(QMainWindow):
             self.scraper_thread.quit()
             self.scraper_thread.wait()
             self.scraper_thread = None 
+
+    def voltar_home(self):
+        from src.views.home_window import HomeWindow
+        home_window = HomeWindow()
+        self.parent().setCentralWidget(home_window)
+        self.close() 

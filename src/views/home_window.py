@@ -78,6 +78,20 @@ class HomeWindow(QMainWindow):
                 border-color: #60a5fa;
                 color: #60a5fa;
             }
+            #back-button {
+                background: transparent;
+                border: none;
+                color: #3b82f6;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 10px 20px;
+                margin: 10px;
+            }
+            #back-button:hover {
+                color: #60a5fa;
+                background: rgba(59, 130, 246, 0.1);
+                border-radius: 6px;
+            }
         """)
         
         central_widget = QWidget()
@@ -164,14 +178,20 @@ class HomeWindow(QMainWindow):
         
         layout.addLayout(cards_layout)
         
+        self.current_window = None  # Armazena a janela atual
+        
     def abrir_scraper(self):
-        self.scraper_window = MainWindow()
-        self.scraper_window.show()
+        if self.current_window:
+            self.current_window.close()
+        self.current_window = MainWindow()
+        self.setCentralWidget(self.current_window)
 
     def abrir_whatsapp(self):
+        if self.current_window:
+            self.current_window.close()
         from src.views.whatsapp_window import WhatsAppWindow
-        self.whatsapp_window = WhatsAppWindow()
-        self.whatsapp_window.show()
+        self.current_window = WhatsAppWindow()
+        self.setCentralWidget(self.current_window)
 
     def abrir_configuracoes(self):
         from src.views.config_window import ConfigWindow

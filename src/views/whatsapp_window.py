@@ -133,16 +133,23 @@ class EnviadorWhatsAppThread(QThread):
 class WhatsAppWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.inicializar_ui()
-        
-    def inicializar_ui(self):
-        self.setWindowTitle("Enviador de WhatsApp")
-        self.setMinimumSize(900, 600)
+        self.setWindowTitle("WhatsApp Sender")
         
         # Widget central
-        widget_central = QWidget()
-        self.setCentralWidget(widget_central)
-        layout = QVBoxLayout(widget_central)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+        
+        # Header com botão voltar
+        header_layout = QHBoxLayout()
+        
+        voltar_button = QPushButton("← Voltar")
+        voltar_button.setObjectName("back-button")
+        voltar_button.setCursor(Qt.PointingHandCursor)
+        voltar_button.clicked.connect(self.voltar_home)
+        header_layout.addWidget(voltar_button, alignment=Qt.AlignLeft)
+        
+        layout.addLayout(header_layout)
         
         # Título
         titulo = QLabel("Enviador de Mensagens WhatsApp")
@@ -174,6 +181,12 @@ class WhatsAppWindow(QMainWindow):
         layout_botoes.addWidget(self.botao_carregar)
         layout_botoes.addWidget(self.botao_enviar)
         layout.addLayout(layout_botoes)
+        
+    def voltar_home(self):
+        from src.views.home_window import HomeWindow
+        home_window = HomeWindow()
+        self.parent().setCentralWidget(home_window)
+        self.close()
         
     def carregar_excel(self):
         arquivo, _ = QFileDialog.getOpenFileName(
