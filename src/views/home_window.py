@@ -64,6 +64,20 @@ class HomeWindow(QMainWindow):
                 line-height: 1.6;
                 margin-bottom: 30px;
             }
+            #config-button {
+                background: transparent;
+                border: 2px solid #3b82f6;
+                color: #3b82f6;
+                padding: 12px 24px;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 8px;
+            }
+            #config-button:hover {
+                background: rgba(59, 130, 246, 0.1);
+                border-color: #60a5fa;
+                color: #60a5fa;
+            }
         """)
         
         central_widget = QWidget()
@@ -72,19 +86,29 @@ class HomeWindow(QMainWindow):
         layout.setContentsMargins(80, 60, 80, 60)
         layout.setSpacing(0)
         
-        # Header
-        header = QVBoxLayout()
+        # Header com título e botão de configurações
+        header_layout = QHBoxLayout()
+        
+        # Container para título e subtítulo
+        title_container = QVBoxLayout()
         title = QLabel("LEAD AI")
         title.setObjectName("title")
-        title.setAlignment(Qt.AlignCenter)
-        
         subtitle = QLabel("Sua plataforma inteligente de prospecção de leads")
         subtitle.setObjectName("subtitle")
-        subtitle.setAlignment(Qt.AlignCenter)
         
-        header.addWidget(title)
-        header.addWidget(subtitle)
-        layout.addLayout(header)
+        title_container.addWidget(title, alignment=Qt.AlignLeft)
+        title_container.addWidget(subtitle, alignment=Qt.AlignLeft)
+        header_layout.addLayout(title_container)
+        
+        # Botão de configurações
+        config_button = QPushButton("⚙️ Configurações")
+        
+        config_button.setObjectName("config-button")
+        config_button.setCursor(Qt.PointingHandCursor)
+        config_button.clicked.connect(self.abrir_configuracoes)
+        header_layout.addWidget(config_button, alignment=Qt.AlignRight | Qt.AlignTop)
+        
+        layout.addLayout(header_layout)
         
         # Cards
         cards_layout = QHBoxLayout()
@@ -147,4 +171,9 @@ class HomeWindow(QMainWindow):
     def abrir_whatsapp(self):
         from src.views.whatsapp_window import WhatsAppWindow
         self.whatsapp_window = WhatsAppWindow()
-        self.whatsapp_window.show() 
+        self.whatsapp_window.show()
+
+    def abrir_configuracoes(self):
+        from src.views.config_window import ConfigWindow
+        config_window = ConfigWindow(self)
+        config_window.exec_() 

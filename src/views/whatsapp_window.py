@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QLabel, QPushButton, QTableWidget, QTableWidgetItem, 
-                           QMessageBox, QFileDialog, QProgressBar)
+                           QMessageBox, QFileDialog, QProgressBar, QDialog)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QColor
 import pandas as pd
@@ -259,4 +259,11 @@ class WhatsAppWindow(QMainWindow):
             
         except Exception as e:
             print(f"Erro ao enviar mensagem: {str(e)}")
-            return False 
+            return False
+
+    def abrir_configuracoes(self):
+        from src.views.config_dialog import ConfigDialog
+        dialog = ConfigDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            # Recarrega as variáveis de ambiente
+            load_dotenv() 
